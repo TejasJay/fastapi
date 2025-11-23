@@ -417,3 +417,216 @@ async def create_images(
     images: List[Image] = Body(default_factory=list)
 ):
     return {"image":images, "weights": index_weights}
+
+
+# add example using model config
+
+class Item(BaseModel):
+    name: str
+    description: Union[str, None] = None
+    price: float
+    tax: float | None = None
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": 
+            [
+                {
+                "name": "laptop",
+                "description": "description of item",
+                "price": 1000.10,
+                "tax": 10.10
+                }
+            ]
+        }
+    }
+
+@app.put("/items-with-modelcongig-examples/{item_id}")
+async def update_item(
+    item_id: int,
+    item: Item
+):
+    result = {"item_id": item_id, "item": item}
+    return result
+
+# add example using pydantic Field
+
+class Item(BaseModel):
+    name: str = Field(examples=["laptop"])
+    description: Union[str, None] = Field(default=None, examples=["The description of the laptop config"])
+    price: float = Field(examples=[1000.10])
+    tax: float | None = Field(default=None, examples=[10.10])
+
+@app.put("/items-with-pydantic-examples/{item_id}")
+async def update_item(
+    item_id: int,
+    item: Item
+):
+    result = {"item_id": item_id, "item": item}
+    return result
+
+
+# add examples with fastapi Body using Annotated
+
+class Item(BaseModel):
+    name: str
+    description: Union[str, None] = None
+    price: float
+    tax: float | None = None
+
+@app.put("/items-examples-with-body/{item_id}")
+async def update_item(
+    *,
+    item_id: int,
+    item: Annotated[Item, 
+        Body(
+            examples=[
+                {
+                    "name": "Foo",
+                    "description": "A very nice Item",
+                    "price": 35.4,
+                    "tax": 3.2,
+                },
+                {
+                    "name": "Bar",
+                    "price": "35.4",
+                },
+                {
+                    "name": "Baz",
+                    "price": "thirty five point four",
+                },
+            ],
+    )]
+):
+    return {"item_id": item_id, "item": item}
+
+
+# examples with openAPI for more example in /docs
+
+
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    tax: float | None = None
+
+
+@app.put("/items-example-with-openAPI/{item_id}")
+async def update_item(
+    *,
+    item_id: int,
+    item: Annotated[
+        Item,
+        Body(
+            openapi_examples={
+                "normal": {
+                    "summary": "A normal example",
+                    "description": "A **normal** item works correctly.",
+                    "value": {
+                        "name": "Foo",
+                        "description": "A very nice Item",
+                        "price": 35.4,
+                        "tax": 3.2,
+                    },
+                },
+                "converted": {
+                    "summary": "An example with converted data",
+                    "description": "FastAPI can convert price `strings` to actual `numbers` automatically",
+                    "value": {
+                        "name": "Bar",
+                        "price": "35.4",
+                    },
+                },
+                "invalid": {
+                    "summary": "Invalid data is rejected with an error",
+                    "value": {
+                        "name": "Baz",
+                        "price": "thirty five point four",
+                    },
+                },
+            },
+        ),
+    ],
+):
+    results = {"item_id": item_id, "item": item}
+    return results
+
+
+# more data types in Body
+
+from uuid import UUID
+from datetime import datetime, timedelta, time
+
+@app.put("/items-moredatatypes/{item_id}")
+async def read_item(
+    item_id: UUID,
+    start_datetime: Annotated[datetime, Body()],
+    end_datetime: Annotated[datetime, Body()],
+    process_after: Annotated[timedelta, Body()],
+    repeat_at: Annotated[time | None, Body()]
+):
+    start_process = start_datetime + process_after
+    duration = end_datetime - start_datetime
+    return {
+        "item_id": item_id,
+        "start_datetime": start_datetime,
+        "end_datetime": end_datetime,
+        "process_after": process_after,
+        "repeat_at": repeat_at,
+        "start_process": start_process,
+        "duration": duration,
+    }
+
+# more datatypes with pydantic
+
+class Item(BaseModel):
+    item_id: UUID = Field(examples=["acde070d-8c4c-4f0d-9d8a-162843c10333"])
+    start_datetime: datetime = Field(examples=["2025-11-23T17:45:00-05:00"])
+    end_datetime: datetime = Field(examples=["2025-11-23T17:45:00-05:10"])
+    process_after: timedelta = Field(examples=["0:00:45.123456"])
+    repeat_at: time = Field(examples=["00:05:10"])
+
+@app.put("/items-with-pydantic-more-datatypes/{item_id}")
+async def update_item(
+    item_id: UUID,
+    item: Item
+):
+    start_process = item.start_datetime + item.process_after
+    duration = item.end_datetime - item.start_datetime
+    result = {"item_id": item_id, "item":item}
+    result.update({"start_process":start_process})
+    result.update({"duration":duration})
+    return result
+
+
+# store cookies
+
+from fastapi import Cookie
+
+@app.get("/get-users-session/")
+async def get_session(
+    session_id: Annotated[str | None, Cookie()] = None
+):
+    return {"session_id": session_id}
+
+
+# set Headers
+
+from fastapi import Header
+
+@app.get("/get-users-headers/")
+async def get_session(
+    header: Annotated[str | None, Header()] = None
+):
+    return {"header": header}
+
+
+# set multiple Headers
+
+from fastapi import Header
+
+@app.get("/get-multiple-headers/")
+async def get_session(
+    x_token: Annotated[List[str] | None, Header()] = None
+):
+    return {"X-Token values": x_token}
