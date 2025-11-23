@@ -231,3 +231,189 @@ async def get_valid_items(
     else:
         id, item = random.choice(list(data.items()))
     return {"id": id, "name": item}
+
+
+from fastapi import Path
+
+@app.get("/items-with-path/{item_id}")
+async def read_items(
+    item_id: Annotated[int, Path(title="The ID of the item to get", ge=1, le=1000)],
+    size: Annotated[float, Query(ge=1, le=100)],
+    q: Annotated[str | None, Query(min_length=3, max_length=1000)] = None,
+    ):
+    result = {"item_id": item_id}
+    if q:
+        result.update({"q": q})
+    if size:
+        result.update({"size":size})
+    return result
+
+
+from typing import Literal, Annotated
+from pydantic import BaseModel, Field
+
+class FilterParams(BaseModel):
+    model_config= {"extra": "forbid"}
+    limit: int = Field(100, ge=0, le=100)
+    offset: int = Field(0, ge=0)
+    order_by: Literal["created_at", "updated_at"] = "created_at"
+    tags: list[str] = []
+
+@app.get("/items-based-literal")
+async def read_items(filter_query: Annotated[FilterParams, Query()]):
+    return filter_query
+
+
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    tax: float
+
+class User(BaseModel):
+    username: str
+    full_name: str | None = None
+
+@app.post("/item-multi-params/{item_id}")
+async def send_item(
+    item_id: Annotated[int, Path(title="The ID of the item to get", ge=0, le=100)],
+    user: User,
+    item: Item = None,
+    q: str | None = None,
+):
+    results= {"item_id": item_id}
+    results.update({"user": user})
+    if item:
+        results.update({"item": item})
+    if q:
+        results.update({"q":q})
+    return results
+
+
+from fastapi import Body
+
+@app.put("/items-update-body/{item_id}")
+async def update_item(
+    item_id: int,
+    item: Item,
+    user: User,
+    importance: Annotated[int, Body()]
+):
+    results = {"item_id": item_id, "item": item, "user": user, "importance": importance}
+    return results
+
+
+@app.put("/items-embed-body/{item_id}")
+async def update_item(
+    item_id: Annotated[int, Path(title = "The ID of the item to look for")],
+    item: Annotated[Item, Body(embed=True)]
+):
+    results = {"item_id": item_id, "item": item}
+    return results
+
+
+class Item(BaseModel):
+    name: str
+    description: str | None = Field(default=None, title="The description of the item", description="The description of the iem", max_length= 100) 
+    price: float = Field(default=0.0, title="the price of the item", ge=0.0, le=1000.0)
+    tax: float = Field(default=0.0, title="the tax of the item", ge=0.0, le=100.0)
+
+@app.put("/items-field-params/{item_id}")
+async def update_item(
+    item_id: Annotated[int, Path(title="The ID of the item to fetch")],
+    item: Annotated[Item, Body(embed=True)]
+):
+    result = {"item_id": item_id, "items": item}
+    return item
+
+
+from typing import Union, List, Set
+
+class Item(BaseModel):
+    name: Union[str, None]
+    description: str | None = Field(default=None, title="The description of the item", description="The description of the iem", max_length= 100) 
+    price: float = Field(default=0.0, title="the price of the item", ge=0.0, le=1000.0)
+    tax: float = Field(default=0.0, title="the tax of the item", ge=0.0, le=100.0)
+    tags: List[str] = []
+    unique_tags: Set[str] = set()
+
+@app.put("/items-field-params-list-set/{item_id}")
+async def update_item(
+    item_id: Annotated[int, Path(title="The ID of the item to fetch")],
+    item: Annotated[Item, Body(embed=True)]
+):
+    result = {"item_id": item_id, "items": item}
+    return result
+
+
+# nested pydantic models
+
+from pydantic import BaseModel, HttpUrl
+
+class Image(BaseModel):
+    url: HttpUrl
+    name: Union[str, None]
+
+class Item(BaseModel):
+    name: Union[str, None]
+    description: str | None = Field(default=None, title="The description of the item", description="The description of the item", max_length= 100) 
+    price: float = Field(default=0.0, title="the price of the item", ge=0.0, le=1000.0)
+    tax: float = Field(default=0.0, title="the tax of the item", ge=0.0, le=100.0)
+    tags: List[str] = Field(default_factory=list)
+    unique_tags: Set[str] = Field(default_factory=set)
+    image: Union[Image, None] = Field(default=None)
+    images: List[Union[Image, None]] = Field(default=None)
+
+@app.put("/items-field-params-list-set-with-image/{item_id}")
+async def update_item(
+    item_id: Annotated[int, Path(title="The ID of the item to fetch")],
+    item: Annotated[Item, Body(embed=True)]
+):
+    result = {"item_id": item_id, "items": item}
+    return result
+
+
+
+# deeply nested pydantic models
+
+from pydantic import BaseModel, HttpUrl
+
+class Image(BaseModel):
+    url: HttpUrl
+    name: Union[str, None]
+
+class Item(BaseModel):
+    name: Union[str, None]
+    description: str | None = Field(default=None, title="The description of the item", description="The description of the item", max_length= 100) 
+    price: float = Field(default=0.0, title="the price of the item", ge=0.0, le=1000.0)
+    tax: float = Field(default=0.0, title="the tax of the item", ge=0.0, le=100.0)
+    tags: List[str] = Field(default_factory=list)
+    unique_tags: Set[str] = Field(default_factory=set)
+    image: Union[Image, None] = Field(default=None)
+    images: List[Union[Image, None]] = Field(default=None)
+
+class Offer(BaseModel):
+    name: str
+    description: str | None = None
+    price: Union[float, None]
+    item: List[Item]
+
+@app.post("/offers/")
+async def create_offer(
+    offer: Annotated[Offer, Body(embed=True)]
+):
+    return offer
+
+
+# create multiple list of images
+
+class Image(BaseModel):
+    url: HttpUrl
+    name: str | None = None
+
+@app.post("/images/multiple/")
+async def create_images(
+    index_weights: Union[dict[int, float], None] = Body(default=None),
+    images: List[Image] = Body(default_factory=list)
+):
+    return {"image":images, "weights": index_weights}
