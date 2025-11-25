@@ -630,3 +630,533 @@ async def get_session(
     x_token: Annotated[List[str] | None, Header()] = None
 ):
     return {"X-Token values": x_token}
+
+# Cookies with pydantic models
+
+class Cookies(BaseModel):
+    model_config = {"extra": "forbid"}
+    session_id: str
+    click_tracker: str | None = None
+    ads_tracker: str | None = None
+
+@app.get("/items-cookies-pydantic/")
+async def get_cookies(
+    cookies: Annotated[Cookies, Cookie()]
+):
+    return cookies
+
+# The above way doesnt work, Pydantic models cannot be auto-populated from cookies because they require a JSON object, and cookies do not support nested structures
+
+
+class Cookies(BaseModel):
+    session_id: str
+    click_tracker: str | None = None
+    ads_tracker: str | None = None
+
+@app.get("/items-cookies-pydantic-new/")
+async def get_cookies(
+    session_id: Annotated[str, Cookie()],
+    click_tracker: Annotated[str | None, Cookie()] = None,
+    ads_tracker: Annotated[str | None, Cookie()] = None,
+):
+    return Cookies(
+        session_id=session_id,
+        click_tracker=click_tracker,
+        ads_tracker=ads_tracker,
+    )
+
+
+# Headers with pydantic model
+
+class CommonHeaders(BaseModel):
+    host: str
+    save_data: bool
+    if_modified_since: str | None = None
+    x_tag: List[str] = []
+
+@app.get("/multiple_headers_pydantic/")
+async def get_multiple_headers(
+    headers: Annotated[CommonHeaders, Header()]
+):
+    return headers
+
+
+# response model
+
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float 
+    tax: float | None = None
+    tag: List[str] = []
+
+@app.post("/items-with-response-model/", response_model= Item)
+async def create_item(item: Item) -> Item:
+    return item
+
+@app.get("/items-with-response-model/", response_model= List[Item])
+async def read_item() -> Item:
+    return [
+        {"name": "Portal Gun", "price": 42.0},
+        {"name": "Plumbus", "price": 32.0},
+    ]
+
+
+# email validator and input and output models
+from pydantic import EmailStr
+
+class UserIn(BaseModel):
+    username: str
+    password: str
+    email: EmailStr
+    full_name: str | None = Field(default=None)
+
+class UserOut(BaseModel):
+    username: str
+    email: EmailStr
+    full_name: str | None = Field(default=None)
+
+@app.post("/get-userid-password/", response_model=UserOut)
+async def get_user(user_input: UserIn) -> UserOut:
+    return user_input
+
+
+# filter data (password) in fastapi with interetance
+
+class BaseUser(BaseModel):
+    username: str
+    email: EmailStr
+    full_name: str | None = Field(default=None)    
+
+class UserIn(BaseUser):
+    password: str
+
+@app.post("/create-user-with-inheritance/", response_model=BaseUser)
+async def create_user(user: UserIn):
+    return user
+
+# fast API Response and Redirect Responses
+
+from fastapi import Response
+from fastapi.responses import RedirectResponse, JSONResponse
+
+@app.get("/use-response-in-output/")
+async def get_portal(teleport: bool = False) -> Response:
+    if teleport:
+        return RedirectResponse(url="https://www.youtube.com/watch?v=EEDYFSwegvM")
+    return JSONResponse(content={"message": "Here's your interdimensional portal."})
+
+# get redirect response
+@app.get("/teleport-redirect-response/")
+async def get_teleport() -> RedirectResponse:
+    return RedirectResponse(url="https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+
+# disable the responsemodel for multple output like dict or a pydantic type output
+
+@app.get("/use-response-in-output-disable-responsemodel/", response_model=None)
+async def get_portal(teleport: bool = False) -> Response | dict:
+    if teleport:
+        return RedirectResponse(url="https://www.youtube.com/watch?v=EEDYFSwegvM")
+    return JSONResponse(content={"message": "Here's your interdimensional portal."})
+
+
+# only get values other than default values
+
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    tax: float = 10.5
+    tags: list[str] = []
+
+items = {
+    "foo": {"name": "Foo", "price": 50.2},
+    "bar": {"name": "Bar", "description": "The bartenders", "price": 62, "tax": 20.2},
+    "baz": {"name": "Baz", "description": None, "price": 50.2, "tax": 10.5, "tags": []},
+}
+
+@app.get("/get-items-without-default-set/{item_id}", response_model=Item, response_model_exclude_unset=True)
+async def get_non_default(item_id: str):
+    return items[item_id]
+
+
+# explicitly set response model to include and exclude attributes
+
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    tax: float = 10.5
+
+
+items = {
+    "foo": {"name": "Foo", "price": 50.2},
+    "bar": {"name": "Bar", "description": "The Bar fighters", "price": 62, "tax": 20.2},
+    "baz": {
+        "name": "Baz",
+        "description": "There goes my baz",
+        "price": 50.2,
+        "tax": 10.5,
+    },
+}
+
+@app.get(
+    "/items-explicitly-set-include/{item_id}/name",
+    response_model=Item,
+    response_model_include={"name", "description"},
+)
+async def read_item_name(item_id: str):
+    return items[item_id]
+
+
+@app.get("/items-explicitly-set-include/{item_id}/public", response_model=Item, response_model_exclude={"tax"})
+async def read_item_public_data(item_id: str):
+    return items[item_id]
+
+
+# defining extra models and functions
+
+class BaseUser(BaseModel):
+    user_name: str
+    email: EmailStr
+    
+    full_name: str | None = None
+
+class UserIn(BaseUser):
+    password: str
+
+class UserOut(BaseUser):
+    pass
+
+class UserInDB(BaseUser):
+    hashed_password: str
+
+def fake_password_hasher(raw_password: str):
+    return "hash_key" + raw_password
+
+def save_in_db(user_input: UserIn):
+    hashed_password = fake_password_hasher(user_input.password)
+    user_in_db = UserInDB(**user_input.model_dump(), hashed_password=hashed_password)
+    return user_in_db
+
+@app.post("/save-user-details-password-in-db/", response_model=UserOut)
+async def save_user(user_in: UserIn):
+    save_to_db = save_in_db(user_in)
+    print("User saved! ..not really")
+    return save_to_db
+
+
+# multiple output models using Union
+
+
+class BaseItem(BaseModel):
+    description: str
+    type: str
+
+class CarItem(BaseItem):
+    type: str = "car"
+
+class PlaneItem(BaseItem):
+    type: str = "plane"
+    size: int
+
+items = {
+    "item1": {"description": "All my friends drive a low rider", "type": "car"},
+    "item2": {
+        "description": "Music is my aeroplane, it's my aeroplane",
+        "type": "plane",
+        "size": 5,
+    },
+}
+
+@app.get("/items-multiple-model-results/{item_id}", response_model=Union[PlaneItem, CarItem])
+async def read_item(item_id: str):
+    return items[item_id]
+
+
+# status code
+
+from fastapi import status
+
+@app.post("/send-item-with-status-code/", status_code=status.HTTP_201_CREATED)
+async def create_item(item: Item):
+    return item
+
+# send form data like password
+
+from fastapi import Form
+
+@app.post("/send-use-login-through-form/")
+async def create_user_login(
+    username: Annotated[str, Form()],
+    password: Annotated[str, Form()]
+):
+    return {"username": username}
+
+
+# form pydantic model with config
+
+class FormData(BaseModel):
+    username: str
+    password: str
+    model_config = {"extra": "forbid"}
+
+
+@app.post("/login-with-model-config/", response_model=FormData ,response_model_exclude={"password"})
+async def login(data: Annotated[FormData, Form()]):
+    return data
+
+
+# upload files
+
+from fastapi import File, UploadFile
+
+@app.post("/create-files/")
+async def create_file(file: Annotated[bytes, File()]):
+    return {"file": len(file)}
+
+@app.post("/upload-file/")
+async def upload_file(file: UploadFile):
+    return {"file": file.filename, "content": file.content_type}
+
+
+# upload multiple files with metadata
+
+from fastapi.responses import HTMLResponse
+
+@app.post("/files/")
+async def create_files(
+    files: Annotated[list[bytes], File(description="Multiple files as bytes")],
+):
+    return {"file_sizes": [len(file) for file in files]}
+
+@app.post("/uploadfiles/")
+async def create_upload_files(
+    files: Annotated[
+        list[UploadFile], File(description="Multiple files as UploadFile")
+    ],
+):
+    return {"filenames": [file.filename for file in files]}
+
+@app.get("/view-form-data")
+async def main():
+    content = """
+<body>
+<form action="/files/" enctype="multipart/form-data" method="post">
+<input name="files" type="file" multiple>
+<input type="submit">
+</form>
+<form action="/uploadfiles/" enctype="multipart/form-data" method="post">
+<input name="files" type="file" multiple>
+<input type="submit">
+</form>
+</body>
+    """
+    return HTMLResponse(content=content)
+
+
+# both files and forms
+
+@app.post("/files-form-data/")
+async def create_file(
+    file: Annotated[bytes, File()],
+    fileb: Annotated[UploadFile, File()],
+    token: Annotated[str, Form()],
+):
+    return {
+        "file_size": len(file),
+        "token": token,
+        "fileb_content_type": fileb.content_type,
+    }
+
+
+# HTTP exceptions with custom headers
+
+from fastapi import HTTPException
+
+items = {"foo": "sampleitem"}
+
+@app.get("/item-with-httpexception/{item_id}")
+async def get_item(item_id: str):
+    if item_id not in items:
+        raise HTTPException(status_code=404, 
+                            detail="Item not found", 
+                            headers={"X-Error": "There goes my error"}
+                            )
+    return {"item": items[item_id]}
+
+
+# HTTP exceptions with built-in exceptions and validation errors
+
+from fastapi import FastAPI, HTTPException
+from fastapi.exception_handlers import (
+    http_exception_handler,
+    request_validation_exception_handler,
+)
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+
+
+@app.exception_handler(StarletteHTTPException)
+async def custom_http_exception_handler(request, exc):
+    print(f"OMG! An HTTP error!: {repr(exc)}")
+    return await http_exception_handler(request, exc)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    print(f"OMG! The client sent invalid data!: {exc}")
+    return await request_validation_exception_handler(request, exc)
+
+
+@app.get("/items-built-in-exception-handlers/{item_id}")
+async def read_item(item_id: int):
+    if item_id == 3:
+        raise HTTPException(status_code=418, detail="Nope! I don't like 3.")
+    return {"item_id": item_id}
+
+
+# HTTP exceptions with full custom exceptions and validation errors
+
+from fastapi import HTTPException
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(StarletteHTTPException)
+async def custom_http_execption_handler(request, exc):
+    print(f"This is the custom exception handler : {exc}")  # logging
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": "custom_http_error",
+            "message": str(exc.detail),
+            "status_code": exc.status_code,
+        },
+    )
+
+@app.exception_handler(RequestValidationError)
+async def data_validation_exception_handler(request, exc: RequestValidationError):
+    print(f"The Data validation error is as follows: {exc}")
+    return JSONResponse(
+        status_code=422,
+        content={
+            "error": "validation_error",
+            "messages": exc.errors(),   # list of error details
+            "body": exc.body,           # original input (if available)
+        },
+    )
+
+
+@app.get("/item-with-full-custom-http-validation-exceptions/{item_id}")
+async def get_item(item_id: int):
+    if item_id == 3:
+        raise HTTPException(status_code=418, detail="Not allowed to access")
+    return {"item_id": item_id}
+
+
+# path operation parameters 
+
+# 1) Enum for tag values in the data
+class ItemTag(str, Enum):
+    items = "items"
+    users = "users"
+
+# 2) Request/response model
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    tax: float | None = None
+    # list of enum tags, optional
+    tags: List[ItemTag] = Field(default_factory=list)
+
+@app.post(
+    "/send-item-details-with-tags/",
+    response_model=Item,
+    tags=["items"],  # docs grouping (could also be [ItemTag.items.value])
+    summary="Create a new item",
+    response_description="Created an item",
+    deprecated=True,
+)
+async def create_an_item(item: Item):
+    """
+    Create an item with all the information:
+
+    - **name**: each item must have a name
+    - **description**: a long description
+    - **price**: required
+    - **tax**: if the item doesn't have tax, you can omit this
+    - **tags**: a set of unique tag strings for this item
+    """
+    return item
+
+
+@app.get(
+    "/get-items-details-with-tags/",
+    summary="Gets all items",
+    description="Gets all items with all the information, name, description, price, tax and a set of unique tags",
+    tags=["items"],  # docs group
+)
+async def read_items():
+    return [{"name": "Foo", "price": 42}]
+
+
+@app.get(
+    "/get-users-details-with-tags/",
+    summary="Gets all users",
+    tags=["users"],  # docs group
+)
+async def read_users():
+    return [{"username": "johndoe"}]
+
+
+# Encoding as JSON for DB compatibility which only accepts JSON
+
+from fastapi.encoders import jsonable_encoder
+
+fake_db= {}
+
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    timestamp: datetime
+
+@app.put("/db-update-with-json/{id}")
+async def update_db_item(id: str, item: Item):
+    json_for_db = jsonable_encoder(item)
+    fake_db[id] = json_for_db
+    return fake_db
+
+
+# using patch to only update the required field instead of everything using put, by only fetching the records we need
+
+class Item(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    price: float | None = None
+    tax: float = 10.5
+    tags: list[str] = []
+
+
+items = {
+    "foo": {"name": "Foo", "price": 50.2},
+    "bar": {"name": "Bar", "description": "The bartenders", "price": 62, "tax": 20.2},
+    "baz": {"name": "Baz", "description": None, "price": 50.2, "tax": 10.5, "tags": []},
+}
+
+
+@app.get("/items-get-for-patch/{item_id}", response_model=Item)
+async def read_item(item_id: str):
+    return items[item_id]
+
+
+@app.patch("/items-get-for-patch/{item_id}", response_model=Item)
+async def update_item(item_id: str, item: Item):
+    stored_item_data = items[item_id]
+    stored_item_model = Item(**stored_item_data)
+    update_data = item.model_dump(exclude_unset=True)
+    updated_item = stored_item_model.copy(update=update_data)
+    items[item_id] = jsonable_encoder(updated_item)
+    return updated_item
