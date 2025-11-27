@@ -1160,3 +1160,166 @@ async def update_item(item_id: str, item: Item):
     updated_item = stored_item_model.copy(update=update_data)
     items[item_id] = jsonable_encoder(updated_item)
     return updated_item
+
+
+# Dependancy injection
+
+from fastapi import Depends
+
+async def common_parameters(q : str, skip : int = 0, limit : int = 100):
+    return {"q": q, "skip": skip, "limit": limit}
+
+common_deps = Annotated[dict, Depends(common_parameters)]
+
+@app.get("/items-get-common-parameters/")
+async def read_items(common: common_deps):
+    return common
+
+@app.get("/users-get-common-parameters/")
+async def read_users(common: common_deps):
+    return common
+
+# using class to define a dependancy (any callable can be used as a dependacy)
+
+class CommonParameters:
+    def __init__(self, q: str, skip : int = 0, limit : int = 100):
+        self.q = q
+        self.skip = skip
+        self.limit = limit
+
+fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
+
+
+@app.get("/get-items-with-class-dependacies/")
+# async def read_items(commons: Annotated[CommonParameters, Depends(CommonParameters)]):
+# or we could just write
+async def read_items(commons: Annotated[CommonParameters, Depends()]):
+    response = {}
+    if commons.q:
+        response.update({"q": commons.q})
+    selected_items = fake_items_db[commons.skip : commons.skip + commons.limit]
+    response.update({"items": selected_items})
+    return response
+
+
+# dependancies and sub-dependancies, use use_cache to store in cache
+
+def query_extractor(q : str | None = None):
+    return q
+
+def query_or_cookie_extractor(
+        q: Annotated[str, Depends(query_extractor)],
+        last_query: Annotated[str | None, Cookie()] = None
+        ):
+    if not q:
+        return last_query
+    return q
+
+@app.get("/get-items-with-multiple-subqueries/")
+async def read_items(
+    query_or_cookie: Annotated[str, Depends(query_or_cookie_extractor, use_cache=False)],
+    ):
+    return {"query_or_cookie": query_or_cookie}
+
+# multiple dependancies in path operation decorator where execution isnt needed
+
+async def validate_token(x_token: Annotated[str, Header()]):
+    if x_token != "secret_token":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="X-Token header invalid")
+    
+
+async def validate_key(x_key: Annotated[str, Header()]):
+    if x_key != "secret_key":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="X-Key header invalid")
+    return x_key
+
+@app.get("/get-items-after-validation/", dependencies=[Depends(validate_key), Depends(validate_token)])
+async def read_items():
+    return [{"item": "Foo"}, {"item": "Bar"}]
+
+# can also define dependancies for the whole application like the below example
+
+# from fastapi import Depends, FastAPI, Header, HTTPException
+# from typing_extensions import Annotated
+
+
+# async def verify_token(x_token: Annotated[str, Header()]):
+#     if x_token != "fake-super-secret-token":
+#         raise HTTPException(status_code=400, detail="X-Token header invalid")
+
+
+# async def verify_key(x_key: Annotated[str, Header()]):
+#     if x_key != "fake-super-secret-key":
+#         raise HTTPException(status_code=400, detail="X-Key header invalid")
+#     return x_key
+
+
+# app = FastAPI(dependencies=[Depends(verify_token), Depends(verify_key)])
+
+
+# @app.get("/items/")
+# async def read_items():
+#     return [{"item": "Portal Gun"}, {"item": "Plumbus"}]
+
+
+# @app.get("/users/")
+# async def read_users():
+#     return [{"username": "Rick"}, {"username": "Morty"}]
+
+
+# dependancy with yield
+
+data = {
+    "plumbus": {"description": "Freshly pickled plumbus", "owner": "Morty"},
+    "portal-gun": {"description": "Gun to create portals", "owner": "Rick"},
+}
+
+class OwnerError(Exception):
+    pass
+
+def get_username():
+    try:
+        yield "Rick"
+    except OwnerError as e:
+        raise HTTPException(status_code=400, detail=f"Owner error: {e}")
+    
+@app.get("/items-with-yield/{item_id}")
+async def get_items(item_id: str, username: Annotated[str, Depends(get_username)]):
+    if item_id not in data:
+        raise HTTPException(status_code=404, detail="Item not found")
+    item = data[item_id]
+    if item["owner"] != username:
+        raise OwnerError(username)
+    return item
+
+# dependancy with yeild and scope = Function for execution of yeild before sending response to client
+
+def get_username():
+    try:
+        yield "Rick"
+    finally:
+        print("Cleanup up before response is sent")
+
+@app.get("/users-with-scope-function/me")
+def get_user_me(username: Annotated[str, Depends(get_username, scope="function")]):
+    return username
+
+# dependancy with yeild and scope = request (default) for execution of yeild after sending response to client
+
+def get_username():
+    try:
+        yield "Rick"
+    finally:
+        print("Cleanup up after response is sent")
+
+@app.get("/users-with-scope-request/me")
+def get_user_me(username: Annotated[str, Depends(get_username, scope="request")]):
+    return username
+
+#       INFO   Waiting for application startup.
+#       INFO   Application startup complete.
+# Cleanup up before response is sent
+#       INFO   127.0.0.1:53888 - "GET /users-with-scope-function/me HTTP/1.1" 200
+#       INFO   127.0.0.1:53888 - "GET /users-with-scope-request/me HTTP/1.1" 200
+# Cleanup up after response is sent
+
