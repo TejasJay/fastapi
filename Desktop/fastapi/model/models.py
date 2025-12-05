@@ -20,6 +20,7 @@ class Product(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(index=True)
     description: str
+    price: float
     category_id: int = Field(foreign_key="category.id")
     category: "Category" = Relationship(back_populates="products")  # many products -> one category
     reviews: List["Review"] = Relationship(back_populates="product")  # one product -> many reviews
