@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.ext.asyncio.session import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.orm import sessionmaker
 from .config import settings
 
@@ -18,5 +18,4 @@ async def get_session():
             session.commit() 
         except Exception:
             await session.rollback()
-        finally:
-            session.close()
+            raise
