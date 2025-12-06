@@ -1,6 +1,7 @@
 from sqlmodel import SQLModel
 from typing import List, Optional
 
+# User Schema...........................
 class UserBase(SQLModel):
     username: str
     role: str = "customer"
@@ -11,6 +12,7 @@ class UserCreate(UserBase):
 class UserPublic(UserBase):
     id: int
 
+# Category Schema........................
 class CategoryBase(SQLModel):
     name: str
 
@@ -20,6 +22,7 @@ class CategoryCreate(CategoryBase):
 class CategoryPublic(CategoryBase):
     id: int
 
+# Review Schema............................
 class ReviewBase(SQLModel):
     text: str
     rating: int
@@ -32,6 +35,7 @@ class ReviewPublic(ReviewBase):
     id: int
     user: UserPublic
 
+# Product Schema...........................
 class ProductBase(SQLModel):
     name: str
     description: str 
