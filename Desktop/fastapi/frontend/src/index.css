@@ -1,11 +1,22 @@
+/* Global body styles - applies to the entire application */
 body {
+  /* Set font family with fallback options - uses system fonts for native look */
+  /* -apple-system: macOS/iOS system font, BlinkMacSystemFont: Chrome on macOS */
+  /* Falls back to Segoe UI (Windows), Roboto (Android), Helvetica Neue, Arial, or generic sans-serif */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* Remove default browser margin to eliminate unwanted spacing */
   margin: 0;
+  /* Set light gray background color for the entire page */
   background-color: #f4f7f6;
 }
 
+/* Container class - used for main content areas throughout the application */
 .container {
+  /* Set maximum width to 1200px to prevent content from being too wide on large screens */
   max-width: 1200px;
+  /* Center the container horizontally with 20px top/bottom margin */
+  /* auto left/right margin centers the element */
   margin: 20px auto;
+  /* Add 20px padding inside the container for spacing from edges */
   padding: 20px;
 }

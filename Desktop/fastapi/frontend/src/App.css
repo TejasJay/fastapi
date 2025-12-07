@@ -1,75 +1,264 @@
+/* ============================================
+   NAVBAR STYLES
+   ============================================ */
 
+/* Navbar container - displays navigation bar at the top of every page */
 .navbar {
+  /* Use flexbox layout to arrange navbar items horizontally */
   display: flex;
+  /* Space items apart - brand on left, links on right */
   justify-content: space-between;
+  /* Vertically center all items in the navbar */
   align-items: center;
+  /* Add padding: 1rem top/bottom, 2rem left/right for spacing */
   padding: 1rem 2rem;
+  /* White background color for the navbar */
   background-color: #fff;
+  /* Add subtle shadow below navbar for depth and separation from content */
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-.nav-brand { font-size: 1.5rem; font-weight: bold; }
-.nav-links a { margin-left: 1.5rem; text-decoration: none; color: #333; font-weight: 500; }
-.nav-links a.active { color: #007bff; }
+/* Navbar brand/logo text styling */
+.nav-brand { 
+  /* Set font size to 1.5rem (24px) for prominent branding */
+  font-size: 1.5rem; 
+  /* Make brand text bold for emphasis */
+  font-weight: bold; 
+}
+/* Navbar link styling - applies to all navigation links */
+.nav-links a { 
+  /* Add left margin between links for spacing */
+  margin-left: 1.5rem; 
+  /* Remove underline from links */
+  text-decoration: none; 
+  /* Set link color to dark gray (#333) */
+  color: #333; 
+  /* Medium font weight for readability */
+  font-weight: 500; 
+}
+/* Active navigation link styling - when route matches current page */
+.nav-links a.active { 
+  /* Change color to blue (#007bff) to indicate active page */
+  color: #007bff; 
+}
 
-.page-title { margin-bottom: 2rem; }
+/* ============================================
+   PAGE TITLE STYLES
+   ============================================ */
 
-.category-tabs { margin-bottom: 2rem; }
+/* Page title heading styling - used for main page headings */
+.page-title { 
+  /* Add bottom margin to separate title from content below */
+  margin-bottom: 2rem; 
+}
+
+/* ============================================
+   CATEGORY FILTER STYLES
+   ============================================ */
+
+/* Category tabs container - holds category filter buttons */
+.category-tabs { 
+  /* Add bottom margin to separate category filters from product grid */
+  margin-bottom: 2rem; 
+}
+/* Individual category filter button styling */
 .category-tabs button {
+  /* Add padding inside button: 0.5rem top/bottom, 1rem left/right */
   padding: 0.5rem 1rem;
+  /* Add right margin between buttons for spacing */
   margin-right: 0.5rem;
+  /* Add light gray border around button */
   border: 1px solid #ccc;
+  /* White background color for button */
   background-color: #fff;
+  /* Change cursor to pointer on hover to indicate clickability */
   cursor: pointer;
+  /* Rounded corners (20px radius) for pill-shaped buttons */
   border-radius: 20px;
 }
-.category-tabs button:hover { background-color: #e9ecef; }
+/* Category button hover state - when mouse hovers over button */
+.category-tabs button:hover { 
+  /* Change background to light gray on hover for visual feedback */
+  background-color: #e9ecef; 
+}
 
+/* ============================================
+   PRODUCT GRID STYLES
+   ============================================ */
+
+/* Product grid container - displays products in a responsive grid layout */
 .product-grid {
+  /* Use CSS Grid layout for flexible product card arrangement */
   display: grid;
+  /* Create responsive grid columns: auto-fill creates as many columns as fit */
+  /* Each column is minimum 250px wide, maximum 1fr (equal width) */
+  /* This creates a responsive grid that adapts to screen size */
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  /* Add 1.5rem gap between grid items for spacing */
   gap: 1.5rem;
 }
+/* Individual product card styling */
 .product-card {
+  /* White background color for product card */
   background-color: #fff;
+  /* Rounded corners (8px radius) for modern card appearance */
   border-radius: 8px;
+  /* Add shadow below card for depth and elevation effect */
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  /* Hide any content that overflows the card boundaries */
   overflow: hidden;
+  /* Add 1rem padding inside card for spacing from edges */
   padding: 1rem;
 }
-.product-info h3 { margin-top: 0; }
-.product-price { font-weight: bold; font-size: 1.1rem; }
+/* Product name heading inside product card */
+.product-info h3 { 
+  /* Remove top margin to eliminate unwanted spacing */
+  margin-top: 0; 
+}
+/* Product price text styling */
+.product-price { 
+  /* Make price text bold for emphasis */
+  font-weight: bold; 
+  /* Increase font size to 1.1rem for prominence */
+  font-size: 1.1rem; 
+}
+/* Product category badge styling */
 .product-category {
+  /* Display as inline-block to allow width/height while staying inline */
   display: inline-block;
+  /* Light blue background color for category badge */
   background-color: #e7f3ff;
+  /* Blue text color to match background theme */
   color: #007bff;
+  /* Add padding inside badge: 0.2rem top/bottom, 0.5rem left/right */
   padding: 0.2rem 0.5rem;
+  /* Rounded corners (10px radius) for pill-shaped badge */
   border-radius: 10px;
+  /* Smaller font size (0.8rem) for badge text */
   font-size: 0.8rem;
+  /* Add top margin to separate badge from price */
   margin-top: 0.5rem;
 }
 
-/* Admin Dashboard */
-.dashboard-cards { display: flex; gap: 1.5rem; margin-bottom: 2rem; }
-.dashboard-card { flex: 1; background: #fff; padding: 2rem; text-align: center; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-.dashboard-card h2 { margin-top: 0; }
-.dashboard-card p { font-size: 2.5rem; font-weight: bold; }
+/* ============================================
+   ADMIN DASHBOARD STYLES
+   ============================================ */
+
+/* Dashboard cards container - holds statistics cards */
+.dashboard-cards { 
+  /* Use flexbox to arrange cards horizontally */
+  display: flex; 
+  /* Add 1.5rem gap between cards for spacing */
+  gap: 1.5rem; 
+  /* Add bottom margin to separate cards from action buttons */
+  margin-bottom: 2rem; 
+}
+/* Individual dashboard statistics card */
+.dashboard-card { 
+  /* flex: 1 makes cards grow equally to fill available space */
+  flex: 1; 
+  /* White background color for card */
+  background: #fff; 
+  /* Add 2rem padding inside card for spacing */
+  padding: 2rem; 
+  /* Center-align text inside card */
+  text-align: center; 
+  /* Rounded corners (8px radius) for modern card appearance */
+  border-radius: 8px; 
+  /* Add shadow below card for depth and elevation effect */
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+}
+/* Dashboard card heading styling */
+.dashboard-card h2 { 
+  /* Remove top margin to eliminate unwanted spacing */
+  margin-top: 0; 
+}
+/* Dashboard card number/value styling (e.g., category count, product count) */
+.dashboard-card p { 
+  /* Large font size (2.5rem) for prominent number display */
+  font-size: 2.5rem; 
+  /* Bold font weight for emphasis */
+  font-weight: bold; 
+}
+/* Admin action buttons styling (Add Category, Add Product buttons) */
 .admin-actions button {
+  /* Add padding inside button: 0.8rem top/bottom, 1.5rem left/right */
   padding: 0.8rem 1.5rem;
+  /* Add right margin between buttons for spacing */
   margin-right: 1rem;
+  /* Set font size to 1rem for readability */
   font-size: 1rem;
+  /* Change cursor to pointer on hover to indicate clickability */
   cursor: pointer;
 }
 
-/* Modal Styles */
+/* ============================================
+   MODAL DIALOG STYLES
+   ============================================ */
+
+/* Modal backdrop - dark overlay that covers entire screen behind modal */
 .modal-backdrop {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background-color: rgba(0,0,0,0.5); display: flex;
-  justify-content: center; align-items: center;
+  /* Fixed positioning so backdrop stays in place when scrolling */
+  position: fixed; 
+  /* Position backdrop at top-left corner of viewport */
+  top: 0; 
+  left: 0; 
+  /* Full width of viewport */
+  width: 100%; 
+  /* Full height of viewport */
+  height: 100%;
+  /* Semi-transparent black background (50% opacity) to darken page behind modal */
+  background-color: rgba(0,0,0,0.5); 
+  /* Use flexbox to center modal content */
+  display: flex;
+  /* Center modal horizontally */
+  justify-content: center; 
+  /* Center modal vertically */
+  align-items: center;
 }
+/* Modal content container - the actual dialog box */
 .modal-content {
-  background: white; padding: 2rem; border-radius: 8px; width: 400px;
+  /* White background color for modal dialog */
+  background: white; 
+  /* Add 2rem padding inside modal for spacing */
+  padding: 2rem; 
+  /* Rounded corners (8px radius) for modern dialog appearance */
+  border-radius: 8px; 
+  /* Set fixed width of 400px for modal dialog */
+  width: 400px;
 }
-.modal-content h2 { margin-top: 0; }
-.modal-content form { display: flex; flex-direction: column; gap: 1rem; }
-.modal-content input, .modal-content textarea, .modal-content select { padding: 0.8rem; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem; }
+/* Modal title heading styling */
+.modal-content h2 { 
+  /* Remove top margin to eliminate unwanted spacing */
+  margin-top: 0; 
+}
+/* Modal form styling - arranges form fields vertically */
+.modal-content form { 
+  /* Use flexbox layout for form */
+  display: flex; 
+  /* Stack form fields vertically (column direction) */
+  flex-direction: column; 
+  /* Add 1rem gap between form fields for spacing */
+  gap: 1rem; 
+}
+/* Modal form input fields styling (input, textarea, select) */
+.modal-content input, .modal-content textarea, .modal-content select { 
+  /* Add padding inside input fields: 0.8rem all sides */
+  padding: 0.8rem; 
+  /* Set font size to 1rem for readability */
+  font-size: 1rem; 
+  /* Add light gray border around input fields */
+  border: 1px solid #ccc; 
+  /* Rounded corners (4px radius) for input fields */
+  border-radius: 4px; 
+}
+/* Modal action buttons container (Submit, Cancel buttons) */
+.modal-actions { 
+  /* Use flexbox to arrange buttons horizontally */
+  display: flex; 
+  /* Align buttons to the right side of modal */
+  justify-content: flex-end; 
+  /* Add 1rem gap between buttons for spacing */
+  gap: 1rem; 
+  /* Add top margin to separate buttons from form fields */
+  margin-top: 1rem; 
+}

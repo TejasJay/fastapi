@@ -25,3 +25,16 @@ async def get_product_by_id(product_id: int, session: AsyncSession) -> Product:
     result = await session.exec(statement)
     return result.one_or_none()    
 
+async def get_all_products_paginated(skip: int, limit: int, session: AsyncSession) -> List[Product]:
+    """
+    Retrieves a paginated list of all products from the database.
+    """
+    statement = (
+        select(Product)
+        .options(selectinload(Product.reviews))
+        .options(selectinload(Product.category))
+        .offset(skip)
+        .limit(limit)
+    )
+    result = await session.exec(statement)
+    return result.all()
