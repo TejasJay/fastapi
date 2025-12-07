@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import CategoryApi from '../../api/categoryApi';
+import CategoryApi from '../../api/CategoryApi';
 
 function AddCategoryModel({isOpen, onClose, onSuccess}) {
     const [name, setName] = useState('');
