@@ -21,6 +21,7 @@ fastapi==0.121.3
 fastapi-cli==0.0.16
 fastapi-cloud-cli==0.5.1
 fastar==0.6.0
+greenlet==3.3.0
 h11==0.16.0
 httpcore==1.0.9
 httptools==0.7.1
@@ -41,6 +42,7 @@ mdurl==0.1.2
 nest-asyncio==1.6.0
 packaging==25.0
 parso==0.8.5
+passlib==1.7.4
 pexpect==4.9.0
 platformdirs==4.5.0
 prompt_toolkit==3.0.52
@@ -51,6 +53,7 @@ pure_eval==0.2.3
 pwdlib==0.3.0
 pycparser==2.23
 pydantic==2.12.4
+pydantic-settings==2.12.0
 pydantic_core==2.41.5
 Pygments==2.19.2
 PyJWT==2.10.1

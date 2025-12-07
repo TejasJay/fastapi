@@ -5,7 +5,7 @@ from schema import UserCreate
 from core.security import get_password_hash
 
 async def create_user(user_data: UserCreate, session: AsyncSession) -> User:
-    hashed_password = get_password_hash(create_user.password)
+    hashed_password = get_password_hash(user_data.password)
     # create password excluding plain password
     user_dict = user_data.model_dump(exclude={"password"})
     db_user = User(**user_dict, password=hashed_password)

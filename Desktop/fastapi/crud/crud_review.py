@@ -5,8 +5,9 @@ from model.models import Review
 from schema import ReviewCreate
 
 
-async def create_review(review_data: ReviewCreate, session: AsyncSession) -> Review:
-    db_review = Review.model_validate(review_data)
+async def create_review(review_data: ReviewCreate, user_id: int, session: AsyncSession) -> Review:
+    review_dict = review_data.model_dump()
+    db_review = Review.model_validate(**review_dict, user_id=user_id)
     session.add(db_review)
     await session.commit()
     await session.refresh(db_review)

@@ -47,7 +47,7 @@ class ProductCreate(ProductBase):
 class ProductPublic(ProductBase):
     id: int
     category: CategoryPublic
-    review: List[ReviewPublic]
+    reviews: List[ReviewPublic]
 
 # To avoid circular imports, we can create specific models for nested data
 # that don't have their own nested relationships.

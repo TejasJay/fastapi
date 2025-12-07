@@ -23,7 +23,7 @@ async def get_all_category(
 
 
 @router.get("/{category_id}", response_model=CategoryPublic)
-async def get_all_category(
+async def get_category_by_id(
     category_id: int,
     session: AsyncSession = Depends(get_session)
 ):
