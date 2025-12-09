@@ -17,4 +17,5 @@ class Settings(BaseSettings):
     API_AUTH_KEY: str
 
 # Create settings instance - no need to pass extra="ignore" as parameter
-settings = Settings()
+def get_settings():
+    return Settings()
