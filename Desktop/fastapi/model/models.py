@@ -34,3 +34,10 @@ class Review(SQLModel, table=True):
     user: "User" = Relationship(back_populates="reviews")  # many reviews -> one user
     product_id: int = Field(foreign_key="product.id")
     product: "Product" = Relationship(back_populates="reviews")  # many reviews -> one product
+
+
+class ProductOrder(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    customer_name: str
+    item: str
+    status: str = Field(default="Order Is Placed")

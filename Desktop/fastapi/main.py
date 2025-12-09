@@ -1,6 +1,6 @@
 # main.py
 from fastapi import FastAPI, Request, status
-from api import user, product, category, review
+from api import user, product, category, review, basic_background
 # , basic_background, background_status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
@@ -48,7 +48,7 @@ app.include_router(category.router, prefix="/api/v1/categories", tags=["Categori
 app.include_router(product.router, prefix="/api/v1/products", tags=["Products"])
 app.include_router(review.router, prefix="/api/v1/reviews", tags=["Reviews"])
 app.include_router(weather.router, prefix="/api/v1/weather", tags=["Weather"])
-# app.include_router(basic_background.router, prefix="/api/v1/background", tags=["Background Tasks"])
+app.include_router(basic_background.router, prefix="/api/v1/background", tags=["Background Tasks"])
 # app.include_router(background_status.router, prefix="/api/v1/order_status", tags=["Order Status"])
 
 # Add this section
