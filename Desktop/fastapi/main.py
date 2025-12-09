@@ -7,10 +7,27 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from api import weather
 
+from core.config import get_settings
+from contextlib import asynccontextmanager
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+import redis.asyncio as redis
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    redis_client = redis.Redis(host="localhost", port=6379, db=0)
+    FastAPICache.init(RedisBackend(redis_client), prefix="fastapi-cache")
+    yield
+    await redis_client.close()
+
 # Create the main FastAPI application instance.
 # The metadata parameters like title, description, etc., are optional
 # and primarily used for the automatic API documentation.
-app = FastAPI()
+app = FastAPI(
+    title="FastAPI E-commerce",
+    description="A FastAPI application for an e-commerce platform",
+    version="1.0.0",
+    lifespan=lifespan)
 
 async def validation_exception_handler(request: Request, exc:RequestValidationError):
     friendly_error = []

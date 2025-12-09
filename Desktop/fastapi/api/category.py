@@ -4,6 +4,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from core.db import get_session
 from crud import crud_category
 from schema import CategoryCreate, CategoryPublic
+from fastapi_cache.decorator import cache
+from fastapi_cache import FastAPICache
 
 router = APIRouter()
 
@@ -12,10 +14,13 @@ async def create_category(
     category_data: CategoryCreate,
     session: AsyncSession = Depends(get_session)
 ):
-    return await crud_category.create_category(category_data=category_data, session=session)
+    new_category = await crud_category.create_category(category_data=category_data, session=session)
+    await FastAPICache.clear(namespace="get_allcategory_list")
+    return new_category
 
 
 @router.get("/", response_model=List[CategoryPublic])
+@cache(expire=300, namespace="get_allcategory_list")
 async def get_all_category(
     session: AsyncSession = Depends(get_session)
 ):

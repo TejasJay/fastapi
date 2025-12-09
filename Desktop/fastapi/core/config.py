@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from functools import lru_cache
 
 class Settings(BaseSettings):
     # Configure Pydantic settings using the new v2 syntax
@@ -17,5 +18,6 @@ class Settings(BaseSettings):
     API_AUTH_KEY: str
 
 # Create settings instance - no need to pass extra="ignore" as parameter
+@lru_cache()
 def get_settings():
     return Settings()
