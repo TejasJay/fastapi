@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     # DATABASE_SYNC_URL: str = "postgresql+psycopg2://postgres:root@host.docker.internal:5432/fastapi_ecom"
     SECRET_KEY: str
     ALGORITHM: str
+    API_AUTH_KEY: str
 
 # Create settings instance - no need to pass extra="ignore" as parameter
 settings = Settings()

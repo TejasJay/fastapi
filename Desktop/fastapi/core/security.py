@@ -1,6 +1,13 @@
 from passlib.context import CryptContext
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Initialize CryptContext with bcrypt scheme
+# Use lazy initialization to avoid errors during import
+try:
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+except Exception:
+    # Fallback if bcrypt initialization fails
+    # This should not happen if bcrypt is properly installed
+    raise ImportError("bcrypt is required. Install it with: pip install bcrypt")
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
