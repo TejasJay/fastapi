@@ -15,7 +15,7 @@ async def get_session():
     async with AsyncSessionFactory() as session:
         try:
             yield session
-            session.commit() 
+            await session.commit()  # Fixed: added 'await' for async commit
         except Exception:
             await session.rollback()
             raise

@@ -14,5 +14,31 @@ services:
       - pgdata:/var/lib/postgresql/data
       - .scripts/init.sql:/docker-entrypoint-initdb.d/init.sql 
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    command: redis-server --appendonly yes
+
+  celery-worker:
+    build: .
+    container_name: celery-worker
+    command: celery -A worker.celery_app worker -I tasks --loglevel=info
+    volumes:
+      - .:/usr/src/app  # Fixed: match Dockerfile WORKDIR
+    working_dir: /usr/src/app
+    environment:
+      - DATABASE_SYNC_URL=${DATABASE_SYNC_URL}
+      - REDIS_HOST=redis  # Add this
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+
 volumes:
   pgdata:
+  redisdata:

@@ -58,6 +58,8 @@ class CategoryPublicWithProducts(CategoryPublic):
 class UserPublicWithReviews(UserPublic):
     reviews: List[ReviewPublic] = []
 
+
+# Order Schema background job...........................
 class OrderCreate(SQLModel):
     customer_name: str
     item: str

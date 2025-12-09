@@ -12,12 +12,15 @@ class Settings(BaseSettings):
 
     # The format is postgresql+ASYNC_DRIVER://user:password@host/dbname
     DATABASE_URL: str = "postgresql+asyncpg://postgresql:postgrespass@localhost:5432/fastapi_ecom"
-    # DATABASE_SYNC_URL: str = "postgresql+psycopg2://postgres:root@host.docker.internal:5432/fastapi_ecom"
+    DATABASE_SYNC_URL: str = "postgresql+psycopg2://postgres:postgrespass@db:5432/fastapi_ecom"
     SECRET_KEY: str
     ALGORITHM: str
     API_AUTH_KEY: str
+    REDIS_HOST: str = "localhost"
 
 # Create settings instance - no need to pass extra="ignore" as parameter
 @lru_cache()
 def get_settings():
     return Settings()
+
+settings = Settings()

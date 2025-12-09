@@ -1,7 +1,6 @@
 # main.py
 from fastapi import FastAPI, Request, status
-from api import user, product, category, review, basic_background
-# , basic_background, background_status
+from api import user, product, category, review, basic_background, background_status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -15,10 +14,12 @@ import redis.asyncio as redis
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    redis_client = redis.Redis(host="localhost", port=6379, db=0)
+    # Get settings and use REDIS_HOST from config
+    settings = get_settings()
+    redis_client = redis.Redis(host=settings.REDIS_HOST, port=6379, db=0)
     FastAPICache.init(RedisBackend(redis_client), prefix="fastapi-cache")
     yield
-    await redis_client.close()
+    await redis_client.aclose() 
 
 # Create the main FastAPI application instance.
 # The metadata parameters like title, description, etc., are optional
@@ -49,7 +50,7 @@ app.include_router(product.router, prefix="/api/v1/products", tags=["Products"])
 app.include_router(review.router, prefix="/api/v1/reviews", tags=["Reviews"])
 app.include_router(weather.router, prefix="/api/v1/weather", tags=["Weather"])
 app.include_router(basic_background.router, prefix="/api/v1/background", tags=["Background Tasks"])
-# app.include_router(background_status.router, prefix="/api/v1/order_status", tags=["Order Status"])
+app.include_router(background_status.router, prefix="/api/v1/order_status", tags=["Order Status"])
 
 # Add this section
 origins = [
